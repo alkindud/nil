@@ -53,5 +53,5 @@ chown -R $NODE_USER:$NODE_USER /home/$NODE_USER
 
 echo "
 before starting service need to check and adjust options rpcport, bind, externalip, masternodeprivkey in every sin.conf
-
+for starting node use: sudo systemctl start sinovate1.service
 now use sin1 instead of sin-cli, for example: ./sin1 masternode status"
