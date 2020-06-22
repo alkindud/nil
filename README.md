@@ -1,2 +1,2 @@
 # nil
-some scripts for sinovate infinity nodes
+some multinode scripts for sinovate infinity nodes
