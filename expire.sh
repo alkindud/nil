@@ -23,4 +23,4 @@ $cli infinitynode show-infos | tr -d "\":," |\
     awk -v cb="$cb" -v d="$days" '$4>cb && $4<cb+720*d {print $5}' |\
     sort -n | uniq -c |\
     sed 's/1000000/big:/; s/500000/mid:/; s/100000/mini:/' |\
-    awk '{print $2, $1}' | xargs
+    awk '{print $2, $1}' ORS=', ' | sed 's/, $/\n/'
