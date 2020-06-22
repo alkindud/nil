@@ -1,0 +1,84 @@
+# for example make sin2
+
+---------------------------
+
+# stop node sin1
+sudo systemctl stop sinovate1.service
+
+---------------------------
+
+# cd into systemd dir
+cd /etc/systemd/system
+
+# create systemd rule sinovate2.service
+sudo cp sinovate1.service sinovate2.service
+sudo sed -i 's/Description=sinovate1 service/Description=sinovate2 service/' sinovate2.service
+sudo sed -i 's/\.sin1/\.sin2/g' sinovate2.service
+
+---------------------------
+
+# buy ip-address
+# for hetzner: create or modify file /etc/network/interfaces.d/60-my-floating-ip.cfg
+# ip.add.re.ss - your purchased ip-address
+auto eth0:1
+iface eth0:1 inet static
+    address ip.add.re.ss
+    netmask 32
+
+---------------------------
+
+# restart networking
+sudo systemctl restart networking.service
+
+---------------------------
+
+# checking: eth0:1 must be present
+ifconfig
+
+---------------------------
+
+# cd to nodeuser homedir
+cd /home/sinovate
+
+---------------------------
+
+# control free disk space: df -h
+# copy directory .sin1 to .sin2
+cp .sin1 .sin2
+
+---------------------------
+
+# create cli alias
+ln -s sin1 sin2
+
+---------------------------
+
+# modify .sin2/sin.conf
+
+# unique for every node !!! sin2 - 20972, sin3 - 20973, etc
+rpcport=20972
+
+# ip.add.re.ss - your purchased ip-address
+bind=ip.ad.dr.ess
+externalip=ip.ad.dr.ess:20970
+
+# unique for every node !!! make on desktop wallet in debug console: masternode genkey
+# not disclose to anyone
+masternodeprivkey=PRIVATE_KEY
+
+---------------------------
+
+# enable new node
+systemctl daemon-reload
+sudo systemctl enable sinovate2.service
+
+---------------------------
+
+# start nodes
+sudo systemctl start sinovate1.service
+sudo systemctl start sinovate2.service
+
+---------------------------
+
+# checking
+./sin2 masternode status
