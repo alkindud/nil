@@ -44,7 +44,7 @@ cd /home/sinovate
 
 # control free disk space: df -h
 # copy directory .sin1 to .sin2
-cp .sin1 .sin2
+cp -R .sin1 .sin2
 
 ---------------------------
 
