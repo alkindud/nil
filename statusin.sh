@@ -15,7 +15,7 @@ fi
 
 address="$1"
 if [ "$address" ]; then
-    sindirs=".$(ps ax | grep "sind.*[.]sin[0-9]" | grep -o "sin[0-9]" | sort -u | head -n 1)"
+    sindirs="$(ps ax | grep "sind.*[.]sin[0-9]" | grep -o "sin[0-9]" | sort -u | head -n 1)"
 fi
 
 for i in $sindirs; do
