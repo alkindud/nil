@@ -59,7 +59,7 @@ for i in $sindirs; do
     n=0
     echo "$common" | while read j; do
         [ "$j" ] && address=$(echo "$j" | awk '{print $4}')
-        nodeinfo=$(echo "$infos" | grep "$address" | wc -l)
+        nodeinfo=$(echo "$infos" | grep "\"$address" | wc -l)
         [ "$nodeinfo" -eq "0" ] && continue
         [ "$nodeinfo" -eq "1" ] && n=1
         # several infinitynodes at the same address
@@ -94,28 +94,28 @@ for i in $sindirs; do
             lastpayout=$(printf "%.2d:%s\n" $(( $difference/60/60 )) $(date -d @$difference +%M:%S))
         fi
 
-        firstblock=$(echo "$infos" | grep "$address" | head -n$n | tail -n1 | awk '{print $3}')
+        firstblock=$(echo "$infos" | grep "\"$address" | head -n$n | tail -n1 | awk '{print $3}')
         [ ! "$firstblock" ] && firstblock=0
-        lastblock=$(echo "$infos" | grep "$address" | head -n$n | tail -n1 | awk '{print $4}')
+        lastblock=$(echo "$infos" | grep "\"$address" | head -n$n | tail -n1 | awk '{print $4}')
         [ ! "$lastblock" ] && lastblock=0
         lifetime=$(( $currentblock-$firstblock ))
         lastday=`date -u -d "+$(( ($lastblock-$currentblock)*2 )) minutes" +%F`
 
         ip=$(echo "$j" | awk '{print $9}' | awk -F ":" '{print $1}')
         [ ! "$ip" ] && ip="unknown"
-        nodetype=$(echo "$infos" | grep "$address" | head -n$n | tail -n1 | awk '{print $5}')
+        nodetype=$(echo "$infos" | grep "\"$address" | head -n$n | tail -n1 | awk '{print $5}')
         [ ! "$nodetype" ] && nodetype="unknown"
-        mynodescount=$(echo "$ennodetypes" | grep "$nodetype$" | awk '{print $1}')
-        [ ! "$mynodescount" ] && mynodescount=1
 
         nr[1]=160; nr[5]=838; nr[10]=1752
-        idreward=$(echo "$infos" | grep "$address" | head -n$n | tail -n1 | awk '{print $6}')
+        idreward=$(echo "$infos" | grep "\"$address" | head -n$n | tail -n1 | awk '{print $6}')
         if [ "$idreward" ]; then
             reward=${nr[$idreward]}
         else
             reward=$(echo "$j" | awk '{print $11}')
         fi
         [ ! "$reward" ] && reward=0
+        mynodescount=$(echo "$ennodetypes" | grep "$nodetype$" | awk '{print $1}')
+        [ ! "$mynodescount" ] && mynodescount=1
         coinsleft=$(( (720*365-$lifetime)/$mynodescount*$reward ))
         [ "$coinsleft" -lt "0" ] && coinsleft=0
 
