@@ -105,6 +105,8 @@ for i in $sindirs; do
         [ ! "$ip" ] && ip="unknown"
         nodetype=$(echo "$infos" | grep "\"$address" | head -n$n | tail -n1 | awk '{print $5}')
         [ ! "$nodetype" ] && nodetype="unknown"
+        mynodescount=$(echo "$ennodetypes" | grep "$nodetype$" | awk '{print $1}')
+        [ ! "$mynodescount" ] && mynodescount=1
 
         nr[1]=160; nr[5]=838; nr[10]=1752
         idreward=$(echo "$infos" | grep "\"$address" | head -n$n | tail -n1 | awk '{print $6}')
@@ -114,8 +116,6 @@ for i in $sindirs; do
             reward=$(echo "$j" | awk '{print $11}')
         fi
         [ ! "$reward" ] && reward=0
-        mynodescount=$(echo "$ennodetypes" | grep "$nodetype$" | awk '{print $1}')
-        [ ! "$mynodescount" ] && mynodescount=1
         coinsleft=$(( (720*365-$lifetime)/$mynodescount*$reward ))
         [ "$coinsleft" -lt "0" ] && coinsleft=0
 
