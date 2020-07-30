@@ -1,0 +1,12 @@
+[Unit]
+Description=sinovate1 service
+After=network.target
+
+[Service]
+Type=simple
+RemainAfterExit=true
+ExecStart=/home/sinovate/sin-node sin1 start eth0 1.1.1.1
+ExecStop=-/home/sinovate/sin-node sin1 stop
+
+[Install]
+WantedBy=multi-user.target
