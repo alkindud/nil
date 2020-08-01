@@ -39,4 +39,4 @@ enbigroi=$(( (1752*720*365/$enbig)/10000-100 ))
 enmidroi=$(( (838*720*365/$enmid)/5000-100 ))
 enminroi=$(( (160*720*365/$enmin)/1000-100 ))
 
-echo "Infinitynodes: $nodecount ( big: \e[92m$enbig $enbigroi%\e[39m / \e[93m$big $bigroi%\e[39m, mid: \e[92m$enmid $enmidroi%\e[39m / \e[93m$mid $midroi%\e[39m, mini: \e[92m$enmin $enminroi%\e[39m / \e[93m$min $minroi%\e[39m )"
+echo "nodes: $nodecount ( big: \e[92m$enbig $enbigroi%\e[39m / \e[93m$big $bigroi%\e[39m, mid: \e[92m$enmid $enmidroi%\e[39m / \e[93m$mid $midroi%\e[39m, mini: \e[92m$enmin $enminroi%\e[39m / \e[93m$min $minroi%\e[39m )" 
