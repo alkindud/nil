@@ -60,7 +60,7 @@ for i in $sindirs; do
     echo "$common" | while read j; do
         [ "$j" ] && address=$(echo "$j" | awk '{print $4}')
         nodeinfo=$(echo "$infos" | grep "\"$address" | wc -l)
-        [ "$nodeinfo" -eq "0" ] && continue
+#        [ "$nodeinfo" -eq "0" ] && continue
         [ "$nodeinfo" -eq "1" ] && n=1
         # several infinitynodes at the same address
         [ "$nodeinfo" -gt "1" ] && n=$((++n))
@@ -95,15 +95,25 @@ for i in $sindirs; do
         fi
 
         firstblock=$(echo "$infos" | grep "\"$address" | head -n$n | tail -n1 | awk '{print $3}')
-        [ ! "$firstblock" ] && firstblock=0
-        lastblock=$(echo "$infos" | grep "\"$address" | head -n$n | tail -n1 | awk '{print $4}')
-        [ ! "$lastblock" ] && lastblock=0
-        lifetime=$(( $currentblock-$firstblock ))
+        if [ ! "$firstblock" ]; then
+            outpoint=$(echo "$j" | awk -F ":" '{print $1}' | tr "-" " ")
+            if [ "$outpoint" ]; then
+                lifetime=$($cli gettxout $outpoint 2>/dev/null | awk -F ":" '/confirmations/{print $2}' | tr -d "\", ")
+                lastblock=$(( currentblock - lifetime + 262800 ))
+            else
+                lifetime=0
+                lastblock=0
+            fi
+        else
+            lastblock=$(echo "$infos" | grep "\"$address" | head -n$n | tail -n1 | awk '{print $4}')
+            lifetime=$(( $currentblock-$firstblock ))
+        fi
         lastday=`date -u -d "+$(( ($lastblock-$currentblock)*2 )) minutes" +%F`
 
         ip=$(echo "$j" | awk '{print $9}' | awk -F ":" '{print $1}')
         [ ! "$ip" ] && ip="unknown"
         nodetype=$(echo "$infos" | grep "\"$address" | head -n$n | tail -n1 | awk '{print $5}')
+        [ ! "$nodetype" ] && nodetype=$(echo "$j" | awk '{print $12}')
         [ ! "$nodetype" ] && nodetype="unknown"
         mynodescount=$(echo "$ennodetypes" | grep "$nodetype$" | awk '{print $1}')
         [ ! "$mynodescount" ] && mynodescount=1
@@ -136,4 +146,4 @@ for i in $sindirs; do
         fi
     done
     address=""
-done
+done 
