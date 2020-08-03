@@ -1,6 +1,6 @@
 #!/bin/sh
 
-NODE_USER=$(whoami)
+NODE_USER=sinovate
 
 if [ "$(ps -e | grep sind | wc -l)" -eq "0" ]; then
     echo "Service sind do not started"
