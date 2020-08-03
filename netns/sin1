@@ -2,5 +2,5 @@
 
 NODE_USER=sinovate
 SIN_DIR=$(basename $0)
-ip netns exec $SIN_DIR \
+sudo ip netns exec $SIN_DIR \
     /home/$NODE_USER/sin-cli -conf=/home/$NODE_USER/.$SIN_DIR/sin.conf -datadir=/home/$NODE_USER/.$SIN_DIR $@
