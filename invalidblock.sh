@@ -1,6 +1,6 @@
 #!/bin/sh
 
-NODE_USER=$(whoami)
+NODE_USER=sinovate
 
 delay=$(date -u -d "-1 minute" +%FT%H:%M:)
 sindirs=$(find /home/$NODE_USER -name '.sin*' -type d)
