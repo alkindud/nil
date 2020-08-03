@@ -26,17 +26,31 @@ do_start() {
 
     ip netns exec $sin route add default gw $ipaddr_outside dev vn_${sin}a
 
+    if [ "$ipv6_eth" ]; then
+    # ipv6_eth format: 1234:1234:1:1234:1234:123::1/64
+        sysctl net.ipv6.conf.all.forwarding=1 >/dev/null
+        sysctl net.ipv6.conf.all.proxy_ndp=1 >/dev/null
+        v6_ip=$(echo $ipv6_eth | grep -o ".*:")
+        v6_nm=$(echo $ipv6_eth | cut -d'/' -f 2)
+
+        ip -6 address add ${v6_ip}${sin:3:1}b/$v6_nm dev vn_${sin}b
+        ip netns exec $sin ip -6 address add ${v6_ip}${sin:3:1}a/$v6_nm dev vn_${sin}a
+
+        ip -6 route add ${v6_ip}${sin:3:1}a dev vn_${sin}b
+        ip netns exec $sin ip -6 route add default via ${v6_ip}${sin:3:1}b dev vn_${sin}a
+        ip -6 neigh add proxy ${v6_ip}${sin:3:1}a dev $eth
+    fi
+
     for i in D A; do
-        ! iptables -t nat -$i POSTROUTING -s $ipaddr_outside/24 -o $eth -j SNAT --to-source $ipaddr_eth 2>/dev/null
+        ! iptables -t nat -$i POSTROUTING -s $ipaddr_outside/24 -o $eth -j SNAT --to-source $ip_eth 2>/dev/null
         ! iptables -$i FORWARD -i vn_${sin}b -j ACCEPT 2>/dev/null
         ! iptables -$i FORWARD -o vn_${sin}b -j ACCEPT 2>/dev/null
-        ! iptables -t nat -$i PREROUTING --dst $ipaddr_eth -p tcp --dport $port -j DNAT --to-destination $ipaddr_inside 2>/dev/null
+        ! iptables -t nat -$i PREROUTING --dst $ip_eth -p tcp --dport $port -j DNAT --to-destination $ipaddr_inside 2>/dev/null
         ! iptables -t nat -$i POSTROUTING --dst $ipaddr_inside -p tcp --dport $port -j SNAT --to-source $ipaddr_outside 2>/dev/null
-        ! iptables -t nat -$i OUTPUT --dst $ipaddr_eth -p tcp --dport $port -j DNAT --to-destination $ipaddr_inside 2>/dev/null
+        ! iptables -t nat -$i OUTPUT --dst $ip_eth -p tcp --dport $port -j DNAT --to-destination $ipaddr_inside 2>/dev/null
     done
 
     sysctl net.ipv4.ip_forward=1 >/dev/null
-    sysctl net.ipv6.conf.all.forwarding=1 >/dev/null
 
     # start sin node, user $NODE_USER
     ip netns exec $sin \
@@ -54,8 +68,9 @@ do_status() {
 
 do_usage() {
     scriptname=$(basename $0)
-    echo "Usage: sudo ./$scriptname sinN {start|stop|status} [interface] [address]"
+    echo "Usage: sudo ./$scriptname sinN {start|stop|status} [interface] [address] [v6address/mask]"
     echo -e "Example:\tsudo ./$scriptname sin1 start eth0 1.1.1.1"
+    echo -e "\t\tsudo ./$scriptname sin2 start eth0 2.2.2.2 1234:1234:1:1234:1234:123::1/64"
     echo -e "\t\tsudo ./$scriptname sin1 status"
     echo -e "\t\tsudo ./$scriptname sin1 stop"
 }
@@ -69,7 +84,8 @@ fi
 sin="$1"
 sincli="/home/$NODE_USER/sin-cli -conf=/home/$NODE_USER/.$sin/sin.conf -datadir=/home/$NODE_USER/.$sin"
 eth="$3"
-ipaddr_eth="$4"
+ip_eth="$4"
+ipv6_eth="$5"
 
 if ! test -d /home/$NODE_USER/.$sin; then
     echo "Directory /home/$NODE_USER/.$sin not exist"
@@ -83,7 +99,7 @@ case "$2" in
             echo "Node $sin already started"
             exit 1
         fi
-        if [ ! "$eth" ] || [ ! "$ipaddr_eth" ]; then
+        if [ ! "$eth" ] || [ ! "$ip_eth" ]; then
             echo "Required to specify interface and address"
             do_usage
             exit 1
