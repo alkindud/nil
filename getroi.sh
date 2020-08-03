@@ -28,4 +28,4 @@ bigroi=$(( (1752*720*365/$big)/10000-100 ))
 midroi=$(( (838*720*365/$mid)/5000-100 ))
 minroi=$(( (160*720*365/$min)/1000-100 ))
 
-echo "Infinitynodes ROI: big $bigroi%, mid $midroi%, mini $minroi%"
+echo "ROI: big $bigroi%, mid $midroi%, mini $minroi%"
