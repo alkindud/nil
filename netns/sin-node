@@ -95,7 +95,7 @@ fi
 
 case "$2" in
   start)
-        if [ "$(ip netns list | grep $sin)" ] && [ "$(pgrep -f $sin)" ]; then
+        if [ "$(ip netns list | grep $sin)" ] && [ "$(pgrep -f /[.]$sin/)" ]; then
             echo "Node $sin already started"
             exit 1
         fi
