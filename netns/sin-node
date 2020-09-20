@@ -39,15 +39,20 @@ do_start() {
         ip -6 route add ${v6_ip}${sin:3:1}a dev vn_${sin}b
         ip netns exec $sin ip -6 route add default via ${v6_ip}${sin:3:1}b dev vn_${sin}a
         ip -6 neigh add proxy ${v6_ip}${sin:3:1}a dev $eth
+
+        for i in D A; do
+            ! ip6tables -$i FORWARD -i vn_${sin}b -j ACCEPT 2>/dev/null
+            ! ip6tables -$i FORWARD -o vn_${sin}b -j ACCEPT 2>/dev/null
+        done
     fi
 
     for i in D A; do
         ! iptables -t nat -$i POSTROUTING -s $ipaddr_outside/24 -o $eth -j SNAT --to-source $ip_eth 2>/dev/null
         ! iptables -$i FORWARD -i vn_${sin}b -j ACCEPT 2>/dev/null
         ! iptables -$i FORWARD -o vn_${sin}b -j ACCEPT 2>/dev/null
-        ! iptables -t nat -$i PREROUTING --dst $ip_eth -p tcp --dport $port -j DNAT --to-destination $ipaddr_inside 2>/dev/null
-        ! iptables -t nat -$i POSTROUTING --dst $ipaddr_inside -p tcp --dport $port -j SNAT --to-source $ipaddr_outside 2>/dev/null
-        ! iptables -t nat -$i OUTPUT --dst $ip_eth -p tcp --dport $port -j DNAT --to-destination $ipaddr_inside 2>/dev/null
+#        ! iptables -t nat -$i PREROUTING --dst $ip_eth -p tcp --dport $port -j DNAT --to-destination $ipaddr_inside 2>/dev/null
+#        ! iptables -t nat -$i POSTROUTING --dst $ipaddr_inside -p tcp --dport $port -j SNAT --to-source $ipaddr_outside 2>/dev/null
+#        ! iptables -t nat -$i OUTPUT --dst $ip_eth -p tcp --dport $port -j DNAT --to-destination $ipaddr_inside 2>/dev/null
     done
 
     sysctl net.ipv4.ip_forward=1 >/dev/null
