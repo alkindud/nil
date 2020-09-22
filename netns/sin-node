@@ -5,10 +5,6 @@ set -e
 NODE_USER=sinovate
 
 do_start() {
-    ipaddr_outside="10.0.${sin:3:1}.1"
-    ipaddr_inside="10.0.${sin:3:1}.2"
-    port=20970
-
     ! ip netns del $sin 2>/dev/null
     flock --no-fork -- /var/run/netns.lock /usr/bin/env ip netns add $sin
 
@@ -26,10 +22,21 @@ do_start() {
 
     ip netns exec $sin route add default gw $ipaddr_outside dev vn_${sin}a
 
+    for i in D A; do
+        ! iptables -t nat -$i POSTROUTING -s $ipaddr_outside/24 -o $eth -j SNAT --to-source $ip_eth 2>/dev/null
+        ! iptables -$i FORWARD -i vn_${sin}b -j ACCEPT 2>/dev/null
+        ! iptables -$i FORWARD -o vn_${sin}b -j ACCEPT 2>/dev/null
+        if [ "$port" ]; then
+            ! iptables -t nat -$i PREROUTING --dst $ip_eth -p tcp --dport $port -j DNAT --to-destination $ipaddr_inside 2>/dev/null
+            ! iptables -t nat -$i POSTROUTING --dst $ipaddr_inside -p tcp --dport $port -j SNAT --to-source $ipaddr_outside 2>/dev/null
+            ! iptables -t nat -$i OUTPUT --dst $ip_eth -p tcp --dport $port -j DNAT --to-destination $ipaddr_inside 2>/dev/null
+        fi
+    done
+    sysctl net.ipv4.ip_forward=1 >/dev/null
+    mkdir -p /etc/netns/$sin && echo 'nameserver 8.8.8.8' > /etc/netns/$sin/resolv.conf
+
     if [ "$ipv6_eth" ]; then
     # ipv6_eth format: 1234:1234:1:1234:1234:123::1/64
-        sysctl net.ipv6.conf.all.forwarding=1 >/dev/null
-        sysctl net.ipv6.conf.all.proxy_ndp=1 >/dev/null
         v6_ip=$(echo $ipv6_eth | grep -o ".*:")
         v6_nm=$(echo $ipv6_eth | cut -d'/' -f 2)
 
@@ -44,19 +51,9 @@ do_start() {
             ! ip6tables -$i FORWARD -i vn_${sin}b -j ACCEPT 2>/dev/null
             ! ip6tables -$i FORWARD -o vn_${sin}b -j ACCEPT 2>/dev/null
         done
+        sysctl net.ipv6.conf.all.forwarding=1 >/dev/null
+        sysctl net.ipv6.conf.all.proxy_ndp=1 >/dev/null
     fi
-
-    for i in D A; do
-        ! iptables -t nat -$i POSTROUTING -s $ipaddr_outside/24 -o $eth -j SNAT --to-source $ip_eth 2>/dev/null
-        ! iptables -$i FORWARD -i vn_${sin}b -j ACCEPT 2>/dev/null
-        ! iptables -$i FORWARD -o vn_${sin}b -j ACCEPT 2>/dev/null
-#        ! iptables -t nat -$i PREROUTING --dst $ip_eth -p tcp --dport $port -j DNAT --to-destination $ipaddr_inside 2>/dev/null
-#        ! iptables -t nat -$i POSTROUTING --dst $ipaddr_inside -p tcp --dport $port -j SNAT --to-source $ipaddr_outside 2>/dev/null
-#        ! iptables -t nat -$i OUTPUT --dst $ip_eth -p tcp --dport $port -j DNAT --to-destination $ipaddr_inside 2>/dev/null
-    done
-
-    sysctl net.ipv4.ip_forward=1 >/dev/null
-    mkdir -p /etc/netns/$sin && echo 'nameserver 8.8.8.8' > /etc/netns/$sin/resolv.conf
 
     # start sin node, user $NODE_USER
     ip netns exec $sin \
@@ -68,14 +65,14 @@ do_stop() {
 }
 
 do_status() {
-    ip netns exec $sin $sincli masternode status | grep -vP "[{}]"
+    ip netns exec $sin $sincli infinitynode mypeerinfo | grep -vP "[{}]"
     ip netns exec $sin $sincli mnsync status | grep -vP "[{}]"
 }
 
 do_usage() {
     scriptname=$(basename $0)
     echo "Usage: sudo ./$scriptname sinN {start|stop|status} interface address [v6address/mask]"
-    echo -e "Example:\tsudo ./$scriptname sin1 start eth0 1.1.1.1"
+    echo -e "Example:\tsudo ./$scriptname sin1 start eth0 1.1.1.1:20970"
     echo -e "\t\tsudo ./$scriptname sin2 start eth0 2.2.2.2 1234:1234:1:1234:1234:123::1/64"
     echo -e "\t\tsudo ./$scriptname sin1 status"
     echo -e "\t\tsudo ./$scriptname sin1 stop"
@@ -90,8 +87,11 @@ fi
 sin="$1"
 sincli="/home/$NODE_USER/sin-cli -conf=/home/$NODE_USER/.$sin/sin.conf -datadir=/home/$NODE_USER/.$sin"
 eth="$3"
-ip_eth="$4"
+ip_eth=$(echo "$4" | cut -d':' -f 1)
+port=$(echo "$4" | awk -F ":" '{print $2}')
 ipv6_eth="$5"
+ipaddr_outside="10.0.${sin:3:1}.1"
+ipaddr_inside="10.0.${sin:3:1}.2"
 
 if ! test -d /home/$NODE_USER/.$sin; then
     echo "Directory /home/$NODE_USER/.$sin not exist"
