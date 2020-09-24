@@ -5,13 +5,14 @@ set -e
 NODE_USER=sinovate
 
 do_start() {
+    ! ip link del vn_${sin}b
     ! ip netns del $sin 2>/dev/null
     flock --no-fork -- /var/run/netns.lock /usr/bin/env ip netns add $sin
 
     ip netns exec $sin ip link set lo up
 
     # create 2 iface, a - inside, b - outside
-    ip link add vn_${sin}a type veth peer name vn_${sin}b
+    ip link add vn_${sin}b type veth peer name vn_${sin}a
     ip link set vn_${sin}a netns $sin
 
     ip link set vn_${sin}b up
