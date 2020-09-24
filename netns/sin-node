@@ -5,7 +5,7 @@ set -e
 NODE_USER=sinovate
 
 do_start() {
-    ! ip link del vn_${sin}b
+    ! ip link del vn_${sin}b 2>/dev/null
     ! ip netns del $sin 2>/dev/null
     flock --no-fork -- /var/run/netns.lock /usr/bin/env ip netns add $sin
 
