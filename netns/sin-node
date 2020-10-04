@@ -21,7 +21,7 @@ do_start() {
     ip address add $ipaddr_outside/24 dev vn_${sin}b
     ip netns exec $sin ip address add $ipaddr_inside/24 dev vn_${sin}a
 
-    ip netns exec $sin route add default gw $ipaddr_outside dev vn_${sin}a
+    ip netns exec $sin ip route add default via $ipaddr_outside dev vn_${sin}a
 
     for i in D A; do
         ! iptables -t nat -$i POSTROUTING -s $ipaddr_outside/24 -o $eth -j SNAT --to-source $ip_eth 2>/dev/null
