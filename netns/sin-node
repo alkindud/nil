@@ -24,7 +24,7 @@ do_start() {
     ip netns exec $sin ip route add default via $ipaddr_outside dev vn_${sin}a
 
     for i in D A; do
-        ! iptables -t nat -$i POSTROUTING -s $ipaddr_outside/24 -o $eth -j SNAT --to-source $ip_eth 2>/dev/null
+        ! iptables -t nat -$i POSTROUTING -s $ipaddr_outside/24 -o $eth -j MASQUERADE 2>/dev/null
         ! iptables -$i FORWARD -i vn_${sin}b -j ACCEPT 2>/dev/null
         ! iptables -$i FORWARD -o vn_${sin}b -j ACCEPT 2>/dev/null
         if [ "$port" ]; then
@@ -41,12 +41,14 @@ do_start() {
         v6_ip=$(echo $ipv6_eth | grep -o ".*:")
         v6_nm=$(echo $ipv6_eth | cut -d'/' -f 2)
 
-        ip -6 address add ${v6_ip}${sin:3:1}b/$v6_nm dev vn_${sin}b
-        ip netns exec $sin ip -6 address add ${v6_ip}${sin:3:1}a/$v6_nm dev vn_${sin}a
+        ip -6 address add ${v6_ip}${sin:3}b/$v6_nm dev vn_${sin}b
+        ip netns exec $sin ip -6 address add ${v6_ip}${sin:3}a/$v6_nm dev vn_${sin}a
 
-        ip -6 route add ${v6_ip}${sin:3:1}a dev vn_${sin}b
-        ip netns exec $sin ip -6 route add default via ${v6_ip}${sin:3:1}b dev vn_${sin}a
-        ip -6 neigh add proxy ${v6_ip}${sin:3:1}a dev $eth
+        ip -6 route add ${v6_ip}${sin:3}a dev vn_${sin}b
+        ip netns exec $sin ip -6 route add default via ${v6_ip}${sin:3}b dev vn_${sin}a
+        ip netns exec $sin ip -6 route flush proto kernel
+
+        ip -6 neigh add proxy ${v6_ip}${sin:3}a dev $eth
 
         for i in D A; do
             ! ip6tables -$i FORWARD -i vn_${sin}b -j ACCEPT 2>/dev/null
@@ -91,8 +93,8 @@ eth="$3"
 ip_eth=$(echo "$4" | cut -d':' -f 1)
 port=$(echo "$4" | awk -F ":" '{print $2}')
 ipv6_eth="$5"
-ipaddr_outside="10.0.${sin:3:1}.1"
-ipaddr_inside="10.0.${sin:3:1}.2"
+ipaddr_outside="10.0.${sin:3}.1"
+ipaddr_inside="10.0.${sin:3}.2"
 
 if ! test -d /home/$NODE_USER/.$sin; then
     echo "Directory /home/$NODE_USER/.$sin not exist"
