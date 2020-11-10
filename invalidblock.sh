@@ -3,7 +3,7 @@
 NODE_USER=sinovate
 
 delay=$(date -u -d "-1 minute" +%FT%H:%M:)
-sindirs=$(find /home/$NODE_USER -name '.sin*' -type d)
+sindirs=$(find /home/$NODE_USER -maxdepth 1 -name '.sin*' -type d)
 for i in $sindirs; do
     test -f $i/debug.log || continue
     idx=$(basename $i)
