@@ -10,7 +10,7 @@ fi
 sindirs=".sin"
 if [ ! "$(ps ax | grep "sind.*[.]sin[/]")" ]; then
     # multinode
-    sindirs=$(find /home/$NODE_USER -name '.sin[0-9]' -type d -printf '%f\n' | sort)
+    sindirs=$(find /home/$NODE_USER -maxdepth 1 -name '.sin[0-9]' -type d -printf '%f\n' | sort)
 fi
 
 address="$1"
