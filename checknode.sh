@@ -7,7 +7,7 @@ if [ "$(ps -e | grep sind | wc -l)" -eq "0" ]; then
     exit 0
 fi
 
-sindirs=$(find /home/$NODE_USER -name '.sin[0-9]' -type d -printf '%f\n' | sort)
+sindirs=$(find /home/$NODE_USER -maxdepth 1 -name '.sin[0-9]' -type d -printf '%f\n' | sort)
 for i in $sindirs; do
     isstarted=$(ps ax | grep "[/]$i[/]")
     if [ ! "$isstarted" ]; then
