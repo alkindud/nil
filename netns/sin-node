@@ -71,8 +71,8 @@ do_stop() {
 }
 
 do_status() {
-    ip netns exec $sin $sincli infinitynode mypeerinfo | grep -vP "[{}]"
-    ip netns exec $sin $sincli mnsync status | grep -vP "[{}]"
+    ip netns exec $sin $sincli infinitynode mypeerinfo | grep -vP "[{}]" | tr -d "\","
+    ip netns exec $sin $sincli mnsync status | grep -vP "[{}]" | grep "IsBlockchainSynced" | tr -d "\","
 }
 
 do_usage() {
@@ -96,8 +96,8 @@ eth="$3"
 ip_eth=$(echo "$4" | cut -d':' -f 1)
 port=$(echo "$4" | awk -F ":" '{print $2}')
 ipv6_eth="$5"
-ipaddr_outside="10.0.${sin:3}.1"
-ipaddr_inside="10.0.${sin:3}.2"
+ipaddr_outside="172.16.$((10#${sin:3})).1"
+ipaddr_inside="172.16.$((10#${sin:3})).2"
 
 if ! test -d /home/$NODE_USER/.$sin; then
     echo "Directory /home/$NODE_USER/.$sin not exist"
@@ -126,4 +126,4 @@ case "$2" in
   *)
         do_usage
         ;;
-esac
+esac 
